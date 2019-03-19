@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     # Define models and go to train/evaluate
     algo = trainer(output_dir, dataloader, dataset.n_words, dataset.ixtoword)
-    algo = nn.DataParallel(algo)
+    algo = nn.DataParallel(algo,device_ids=[0,1,2,3])
 
     start_t = time.time()
     if cfg.TRAIN.FLAG:

@@ -33,10 +33,9 @@ class condGANTrainer(object):
             mkdir_p(self.model_dir)
             mkdir_p(self.image_dir)
 
-        torch.cuda.set_device(cfg.GPU_ID)
         cudnn.benchmark = True
 
-        self.batch_size = cfg.TRAIN.BATCH_SIZE
+        self.batch_size = cfg.TRAIN.BATCH_SIZE*sfg.GPU_NUM
         self.max_epoch = cfg.TRAIN.MAX_EPOCH
         self.snapshot_interval = cfg.TRAIN.SNAPSHOT_INTERVAL
 
