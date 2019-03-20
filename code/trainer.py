@@ -33,10 +33,11 @@ class condGANTrainer(object):
             mkdir_p(self.model_dir)
             mkdir_p(self.image_dir)
 
-     
+
+        torch.cuda.set_device(cfg.GPU_ID)
         cudnn.benchmark = True
 
-        self.batch_size = cfg.TRAIN.BATCH_SIZE*cfg.GPU_NUM
+        self.batch_size = cfg.TRAIN.BATCH_SIZE
         self.max_epoch = cfg.TRAIN.MAX_EPOCH
         self.snapshot_interval = cfg.TRAIN.SNAPSHOT_INTERVAL
 
@@ -274,7 +275,8 @@ class condGANTrainer(object):
                     errD.backward()
                     optimizersD[i].step()
                     errD_total += errD
-                    D_logs += 'errD%d: %.2f ' % (i, errD.data[0])
+
+                    D_logs += 'errD%d: %.2f ' % (i, errD.data)
 
                 #######################################################
                 # (4) Update G network: maximize log(D(G(z)))
@@ -291,7 +293,7 @@ class condGANTrainer(object):
                                    words_embs, sent_emb, match_labels, cap_lens, class_ids)
                 kl_loss = KL_loss(mu, logvar)
                 errG_total += kl_loss
-                G_logs += 'kl_loss: %.2f ' % kl_loss.data[0]
+                G_logs += 'kl_loss: %.2f ' % kl_loss.data
                 # backward and update parameters
                 errG_total.backward()
                 optimizerG.step()
@@ -318,7 +320,7 @@ class condGANTrainer(object):
             print('''[%d/%d][%d]
                   Loss_D: %.2f Loss_G: %.2f Time: %.2fs'''
                   % (epoch, self.max_epoch, self.num_batches,
-                     errD_total.data[0], errG_total.data[0],
+                     errD_total.data, errG_total.data,
                      end_t - start_t))
 
             if epoch % cfg.TRAIN.SNAPSHOT_INTERVAL == 0:  # and epoch != 0:
