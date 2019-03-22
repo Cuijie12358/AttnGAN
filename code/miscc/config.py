@@ -13,11 +13,7 @@ cfg = __C
 __C.DATASET_NAME = 'birds'
 __C.CONFIG_NAME = ''
 __C.DATA_DIR = ''
-<<<<<<< HEAD
-__C.GPU_NUM = 0
-=======
 __C.GPU_ID = 0
->>>>>>> 88ef206a0f08d77a2eb4a1cbba0d601c95c94bef
 __C.CUDA = True
 __C.WORKERS = 6
 
