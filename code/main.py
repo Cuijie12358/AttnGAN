@@ -15,6 +15,8 @@ import argparse
 import numpy as np
 
 import torch
+import torch.nn as nn
+
 import torchvision.transforms as transforms
 
 dir_path = (os.path.abspath(os.path.join(os.path.realpath(__file__), './.')))
@@ -134,6 +136,11 @@ if __name__ == "__main__":
 
     # Define models and go to train/evaluate
     algo = trainer(output_dir, dataloader, dataset.n_words, dataset.ixtoword)
+    # algo = nn.DataParallel(algo,device_ids=[0,1,2,3])
+    # algo.load_state_dict(torch.load())
+    # algo=algo.module
+
+
 
     start_t = time.time()
     if cfg.TRAIN.FLAG:

@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
-
+# from parallel import DataParallelModel, DataParallelCriterion
 from PIL import Image
 
 from miscc.config import cfg
@@ -33,7 +33,7 @@ class condGANTrainer(object):
             mkdir_p(self.model_dir)
             mkdir_p(self.image_dir)
 
-        torch.cuda.set_device(cfg.GPU_ID)
+        # torch.cuda.set_device(cfg.GPU_ID)
         cudnn.benchmark = True
 
         self.batch_size = cfg.TRAIN.BATCH_SIZE
@@ -83,10 +83,29 @@ class condGANTrainer(object):
                 from model import D_NET256 as D_NET
             # TODO: elif cfg.TREE.BRANCH_NUM > 3:
             netG = G_DCGAN()
+            # netG = DataParallelModel(model,device_ids=[0,1,2,3])
+
+
+            netG = nn.DataParallel(netG,device_ids=[0,1,2,3])
+            deviceG = torch.device("cuda:1")
+            deviceG.to(deviceG)
+            # netG.load_state_dict(torch.load(path))
+            # netG=netG.module
+
             netsD = [D_NET(b_jcu=False)]
+            netsD = DataParallelModel(netsD,device_ids=[0,1,2,3])
+            netsD = torch.device("cuda:2")
+            model.to(deviceD)
+# 
+            
         else:
             from model import D_NET64, D_NET128, D_NET256
             netG = G_NET()
+            netG = nn.DataParallel(netG,device_ids=[0,1,2,3])
+            deviceG = torch.device("cuda:1")
+            netG.to(deviceG)
+
+            # netG = nn.DataParallel(netG,device_ids=[0,1,2,3])
             if cfg.TREE.BRANCH_NUM > 0:
                 netsD.append(D_NET64())
             if cfg.TREE.BRANCH_NUM > 1:
@@ -354,13 +373,24 @@ class condGANTrainer(object):
             # Build and load the generator
             if cfg.GAN.B_DCGAN:
                 netG = G_DCGAN()
+                # netG = nn.DataParallel(netG,device_ids=[0,1,2,3])
             else:
                 netG = G_NET()
+                netG = nn.DataParallel(netG,device_ids=[0,1,2,3])
+                deviceG = torch.device("cuda:1,3")
+                netG.to(deviceG)
+                netG=netG.module
             netG.apply(weights_init)
             netG.cuda()
             netG.eval()
             #
             text_encoder = RNN_ENCODER(self.n_words, nhidden=cfg.TEXT.EMBEDDING_DIM)
+            text_encoder = nn.DataParallel(text_encoder,device_ids=[0,1,2,3])
+            DeviceT = torch.device("cuda:2")
+            text_encoder.to(DeviceT)
+            text_encoder = text_encoder.module
+
+
             state_dict = \
                 torch.load(cfg.TRAIN.NET_E, map_location=lambda storage, loc: storage)
             text_encoder.load_state_dict(state_dict)
@@ -446,8 +476,11 @@ class condGANTrainer(object):
             # the path to save generated images
             if cfg.GAN.B_DCGAN:
                 netG = G_DCGAN()
+                # netG = nn.DataParallel(netG,device_ids=[0,1,2,3])
             else:
                 netG = G_NET()
+                netG = nn.DataParallel(netG,device_ids=[0,1,2,3])
+                netG=netG.module
             s_tmp = cfg.TRAIN.NET_G[:cfg.TRAIN.NET_G.rfind('.pth')]
             model_dir = cfg.TRAIN.NET_G
             state_dict = \
